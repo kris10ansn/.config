@@ -25,16 +25,18 @@ git-checkout-unstaged() {
 		git stash pop;
 }
 
-
 cmsg() {
-		{ git status; echo ""; git diff --cached; } | ollama run deepseek-coder-v2 "
-		You are an assistant that writes Git commit messages using the Conventional Commits specification.
-		Analyze the following diff and output **only** a commit message in the format:
+		ollama run mistral:latest "
+        You are a developer writing clear, concise Git commit messages.
+        Write a commit title (≤ 50 characters) that follows conventional-commit style, then optionally add a short body (max 72 characters per line) if the change needs extra context.
 
+        Avoid going into detail about how the change was made; focus on what and why.
+        Avoid being too vague or generic — be specific about the changes made.
+
+		Use the following format with one of these types: feat, fix, docs, style, refactor, test, chore, perf:
 		<type>(<optional scope>): <short summary>
 
-		Use one of these types: feat, fix, docs, style, refactor, test, chore, perf.
-		Keep it under 72 characters. Do not include extra text.
+        Do not include any extra commentary, just provide the commit message.
 
-		Status and diff:"
+        DIFF: $(git diff --staged)" 
 }
