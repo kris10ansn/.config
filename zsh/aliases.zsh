@@ -17,4 +17,4 @@ alias cdtemp="cd $(mktemp -d)"
 alias copy="xclip -selection clipboard"
 alias ip="ip --color=always"
 alias curl-novpn="curl --interface wlp1s0"
-
+alias clip="xclip -selection clipboard"
