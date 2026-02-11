@@ -8,11 +8,7 @@ path+="$HOME/.local/share/bob/nvim-bin"
 path+="$HOME/.dotnet/tools"
 
 # android
-export ANDROID_HOME="/opt/android-sdk"
-path+="$ANDROID_HOME/tools"
-path+="$ANDROID_HOME/platform-tools"
-path+="$ANDROID_HOME/cmdline-tools/latest/bin"
-path+="$ANDROID_HOME/emulator"
+export ANDROID_HOME="$HOME/Android/Sdk"
 # android end
 
 # java
