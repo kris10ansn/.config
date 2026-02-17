@@ -15,9 +15,9 @@ if [[ -e /usr/share/zsh/manjaro-zsh-prompt ]]; then
   source /usr/share/zsh/manjaro-zsh-prompt
 fi
 
+source $ZDOTDIR/environment.zsh
 source $ZDOTDIR/aliases.zsh
 source $ZDOTDIR/functions.zsh
-source $ZDOTDIR/environment.zsh
 
 source /usr/share/fzf/key-bindings.zsh
 
