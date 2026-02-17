@@ -1,4 +1,3 @@
-
 alias code="codium"
 alias cdcode="cdcodium"
 alias mkcdcode="mkcdcodium"
@@ -21,3 +20,5 @@ alias clip="xclip -selection clipboard"
 alias npms="jq '.scripts' package.json"
 alias restart_touchpad_drivers="sudo modprobe -r psmouse; sudo modprobe psmouse"
 alias prettierrc="cp $ZDOTDIR/defaults/.prettierrc.json .prettierrc.json"
+alias vz="nvim $ZDOTDIR && reload"
+alias vv="nvim $HOME/.config/nvim/"
