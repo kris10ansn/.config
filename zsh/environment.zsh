@@ -9,6 +9,7 @@ path+="$HOME/.dotnet/tools"
 
 # android
 export ANDROID_HOME="$HOME/Android/Sdk"
+path+="$ANDROID_HOME/platform-tools"
 # android end
 
 # java
@@ -27,3 +28,6 @@ export BOB_CONFIG="$HOME/.config/bob/config.json"
 
 # Use powerline
 export USE_POWERLINE="true"
+
+# Editor
+export EDITOR="code"
