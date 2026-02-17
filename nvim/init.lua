@@ -6,11 +6,14 @@ vim.pack.add({
 });
 
 require "mini.pick".setup();
-require "oil".setup()
+require "oil".setup({
+		view_options = {
+				show_hidden = true,
+		}
+})
 
 require "catppuccin".setup()
 vim.cmd("colorscheme catppuccin")
-
 
 vim.opt.number = true;
 vim.opt.relativenumber = true;
