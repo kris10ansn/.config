@@ -30,9 +30,10 @@ git-undo-commit() {
 }
 
 ccommit() {
-  local prompt="Write a git commit message for this diff: a concise summary line (max 50 chars), a blank line, then a body explaining what changed and why. Output only the message, no preamble."
+  local prompt="Write a git commit message for this diff: a concise summary line (max 50 chars), a blank line, then a body explaining what changed and why. Output only the message, no preamble, no code fences."
   local msg
   msg=$(git diff --cached | claude -p "$prompt")
+  msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
   if [[ -z "$msg" ]]; then
     echo "No staged changes or empty message."
@@ -49,3 +50,4 @@ ccommit() {
 
   git commit -m "$msg"
 }
+
