@@ -1,3 +1,6 @@
+#
+path+="$HOME/Applications/bin/"
+
 # npm global
 path+="$HOME/.local/share/.npm-global/bin/"
 
