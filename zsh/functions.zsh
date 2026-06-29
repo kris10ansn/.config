@@ -30,7 +30,14 @@ git-undo-commit() {
 }
 
 ccommit() {
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Output only the message, no preamble, no code fences."
+  local history
+  history=$(git log -20 --pretty=format:'%s')
+
+  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Match the style of these recent commit subjects:
+$history
+
+Output only the message, no preamble, no code fences."
+
   local msg
   msg=$(git diff --cached | claude -p "$prompt")
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
@@ -50,4 +57,3 @@ ccommit() {
 
   git commit -m "$msg"
 }
-
