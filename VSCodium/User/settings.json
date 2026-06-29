@@ -1,0 +1,76 @@
+{
+  "diffEditor.ignoreTrimWhitespace": false,
+  "dotnet.codeLens.enableReferencesCodeLens": false,
+  "dotnet.formatting.organizeImportsOnFormat": true,
+
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "always",
+    "source.removeUnusedImports.biome": "always",
+    "source.removeUnusedImports": "always",
+    "source.fixAll.biome": "always"
+  },
+
+  "editor.cursorSurroundingLines": 15,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "editor.fontFamily": "Cascadia Code",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 17,
+
+  "editor.formatOnSave": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.lineNumbers": "relative",
+  "editor.rulers": [80],
+  "editor.smoothScrolling": true,
+  "editor.stickyScroll.enabled": false,
+  "explorer.confirmPasteNative": false,
+  "extensions.experimental.affinity": { "vscode.vim": 1 },
+  "github.copilot.advanced": {
+    "authProvider": "github"
+  },
+
+  "java.configuration.detectJdksAtStart": false,
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-24",
+      "path": "/usr/lib/jvm/java-24-openjdk"
+    }
+  ],
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "json.schemaDownload.trustedDomains": {
+    "https://schemastore.azurewebsites.net/": true,
+    "https://raw.githubusercontent.com/microsoft/vscode/": true,
+    "https://raw.githubusercontent.com/devcontainers/spec/": true,
+    "https://www.schemastore.org/": true,
+    "https://json.schemastore.org/": true,
+    "https://json-schema.org/": true,
+    "https://developer.microsoft.com/json-schemas/": true,
+    "https://biomejs.dev": true
+  },
+  "prettier.tabWidth": 4,
+
+  "redhat.telemetry.enabled": false,
+  "resharper.dataSharing.allowDataSharing": false,
+
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "contentContainerClassName"
+  ],
+
+  "terminal.integrated.fontFamily": "CaskaydiaCove Nerd Font Mono",
+
+  "update.showReleaseNotes": false,
+  "vim.useSystemClipboard": true,
+  "window.commandCenter": false,
+  "window.titleBarStyle": "native",
+
+  "workbench.colorTheme": "Palenight Italic",
+  "workbench.editor.empty.hint": "hidden",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.layoutControl.enabled": false,
+  "workbench.list.smoothScrolling": true,
+  "workbench.sideBar.location": "right",
+  "workbench.startupEditor": "none"
+}

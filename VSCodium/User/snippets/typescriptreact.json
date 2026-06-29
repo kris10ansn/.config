@@ -1,0 +1,46 @@
+{
+	"React Functional Component": {
+		"prefix": "fc",
+		"body": [
+			"export type $1Props = {}",
+			"",
+			"export const $1: React.FC<$1Props> = ({}) => {",
+			"\t$0",
+			"};",
+		],
+	},
+	"React Native Functional Component": {
+		"prefix": "rnfc",
+		"body": [
+			"import { View, Text } from \"react-native\"",
+			"",
+			"export type $1Props = {",
+			"\t$2",
+			"}",
+			"",
+			"export const $1: React.FC<$1Props> = ({}) => {",
+			"\treturn (",
+			"\t\t<View>",
+			"\t\t\t<Text>$0</Text>",
+			"\t\t</View>",
+			"\t)",
+			"};",
+		],
+	},
+	"React Native Page": {
+		"prefix": "rnp",
+		"body": [
+			"import { View, Text } from \"react-native\"",
+			"",
+			"const $1 = () => {",
+			"\treturn (",
+			"\t\t<View>",
+			"\t\t\t<Text>$0</Text>",
+			"\t\t</View>",
+			"\t)",
+			"};",
+			"",
+			"export default $1;"
+		],
+	}
+}
