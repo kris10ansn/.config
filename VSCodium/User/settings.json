@@ -1,4 +1,5 @@
 {
+  "codeium.enableCodeLens": false,
   "diffEditor.ignoreTrimWhitespace": false,
   "dotnet.codeLens.enableReferencesCodeLens": false,
   "dotnet.formatting.organizeImportsOnFormat": true,
