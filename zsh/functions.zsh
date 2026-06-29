@@ -24,3 +24,7 @@ git-checkout-unstaged() {
 		git checkout "$@"
 		git stash pop;
 }
+
+git-undo-commit() {
+  git reset --soft HEAD~1
+}
