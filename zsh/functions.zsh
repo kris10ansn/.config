@@ -30,11 +30,20 @@ git-undo-commit() {
 }
 
 ccommit() {
-  local history
+  local history context
   history=$(git log -20 --pretty=format:'%s')
+  context="$*"
 
   local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Match the style of these recent commit subjects:
-$history
+$history"
+
+  if [[ -n "$context" ]]; then
+    prompt+="
+
+Additional context from the author: $context"
+  fi
+
+  prompt+="
 
 Output only the message, no preamble, no code fences."
 
