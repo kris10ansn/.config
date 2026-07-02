@@ -43,8 +43,8 @@ ccommit() {
     echo
     git status --short
     echo
-    read -r "reply?Commit all these changes? [y/N] "
-    if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+    read -r "reply?Commit all these changes? [Y/n] "
+    if [[ "$reply" =~ ^[Nn]$ ]]; then
       echo "Aborted."
       return 1
     fi
@@ -65,7 +65,7 @@ Additional context from the author: $context"
 Output only the message, no preamble, no code fences."
 
   local msg
-  msg=$(git diff --cached | claude -p "$prompt")
+  msg=$(git diff --cached | claude -p --model haiku "$prompt")
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
   if [[ -z "$msg" ]]; then
