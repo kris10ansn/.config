@@ -33,4 +33,4 @@ export BOB_CONFIG="$HOME/.config/bob/config.json"
 export USE_POWERLINE="true"
 
 # Editor
-export EDITOR="code"
+export EDITOR="nvim"
