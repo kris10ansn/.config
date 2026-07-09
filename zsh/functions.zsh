@@ -30,8 +30,7 @@ git-undo-commit() {
 }
 
 ccommit() {
-  local history context
-  history=$(git log -20 --pretty=format:'%s')
+  local context
   context="$*"
 
   if git diff --cached --quiet; then
@@ -51,8 +50,8 @@ ccommit() {
     git add -A
   fi
 
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Match the style of these recent commit subjects:
-$history"
+  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. 
+  "
 
   if [[ -n "$context" ]]; then
     prompt+="
