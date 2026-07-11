@@ -28,3 +28,4 @@ unsetopt correct
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 source /usr/share/nvm/init-nvm.sh
 
+eval "$(zoxide init zsh)"
