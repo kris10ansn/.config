@@ -8,7 +8,7 @@
     "source.organizeImports.biome": "always",
     "source.removeUnusedImports.biome": "always",
     "source.removeUnusedImports": "always",
-    "source.fixAll.biome": "always"
+    "source.fixAll.biome": "always",
   },
 
   "editor.cursorSurroundingLines": 15,
@@ -27,15 +27,15 @@
   "explorer.confirmPasteNative": false,
   "extensions.experimental.affinity": { "vscode.vim": 1 },
   "github.copilot.advanced": {
-    "authProvider": "github"
+    "authProvider": "github",
   },
 
   "java.configuration.detectJdksAtStart": false,
   "java.configuration.runtimes": [
     {
       "name": "JavaSE-24",
-      "path": "/usr/lib/jvm/java-24-openjdk"
-    }
+      "path": "/usr/lib/jvm/java-24-openjdk",
+    },
   ],
   "js/ts.preferences.importModuleSpecifier": "non-relative",
   "js/ts.updateImportsOnFileMove.enabled": "always",
@@ -47,7 +47,7 @@
     "https://json.schemastore.org/": true,
     "https://json-schema.org/": true,
     "https://developer.microsoft.com/json-schemas/": true,
-    "https://biomejs.dev": true
+    "https://biomejs.dev": true,
   },
   "prettier.tabWidth": 4,
 
@@ -57,7 +57,7 @@
   "tailwindCSS.classAttributes": [
     "class",
     "className",
-    "contentContainerClassName"
+    "contentContainerClassName",
   ],
 
   "terminal.integrated.fontFamily": "CaskaydiaCove Nerd Font Mono",
@@ -73,5 +73,25 @@
   "workbench.layoutControl.enabled": false,
   "workbench.list.smoothScrolling": true,
   "workbench.sideBar.location": "right",
-  "workbench.startupEditor": "none"
+  "workbench.startupEditor": "none",
+  "gitlens.plusFeatures.enabled": false,
+  "gitlens.codeLens.enabled": false,
+  "workbench.editorAssociations": {
+    "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
+    "*.qrc": "qt-core.qrcEditor",
+  },
+  "qt-core.additionalQtPaths": [
+    {
+      "name": "Qt-5.15.19-linux-g++-x86_64_from_PATH",
+      "path": "/usr/bin/qtpaths",
+    },
+  ],
+  "resharper.region.region": "Europe",
+  "codeium.enableConfig": {
+    "*": true,
+    "qml": true,
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+  },
 }
