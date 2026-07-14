@@ -11,6 +11,10 @@ cdcodium() {
     cd "$@" && codium "."
 }
 
+zc() {
+		z $@ && codium .
+}
+
 mkcdcodium() {
     mkcd "$@" && codium "."
 }
