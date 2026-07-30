@@ -54,8 +54,16 @@ ccommit() {
     git add -A
   fi
 
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. 
-  "
+  local branch
+  branch=$(git branch --show-current)
+
+  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why."
+
+  if [[ -n "$branch" ]]; then
+    prompt+="
+
+The current branch is '$branch'. Use it only as a hint about the scope and intent of the change. Never quote the branch name or mention the branch in the message."
+  fi
 
   if [[ -n "$context" ]]; then
     prompt+="
@@ -67,8 +75,27 @@ Additional context from the author: $context"
 
 Output only the message, no preamble, no code fences."
 
+  local max_diff_lines=2000
+  local diff
+  diff=$(git diff --cached)
+
+  if (( ${#${(f)diff}} > max_diff_lines )); then
+    diff=$(printf '%s\n' "$diff" | head -n $max_diff_lines)
+    diff+="
+
+[... diff truncated after $max_diff_lines lines; see the file summary above for the full scope ...]"
+  fi
+
   local msg
-  msg=$(git diff --cached | claude -p --model haiku "$prompt")
+  msg=$(
+    {
+      printf 'Files changed:\n'
+      git diff --cached --stat
+      printf '\nFile status:\n'
+      git diff --cached --name-status -M
+      printf '\nDiff:\n%s\n' "$diff"
+    } | claude -p --model haiku "$prompt"
+  )
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
   if [[ -z "$msg" ]]; then

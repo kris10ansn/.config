@@ -40,7 +40,8 @@ Sourced via `ZDOTDIR="$HOME/.config/zsh"`.
   `v`→`nvim`, `ll`→`exa -la`, plus quick-edit aliases for the configs themselves.
 - **[`functions.zsh`](zsh/functions.zsh)** — helpers including `mkcd`, `cdclone`,
   a few git shortcuts, and `ccommit` — an AI-generated Conventional Commits
-  helper that pipes the staged diff through `claude -p`.
+  helper that pipes the current branch name, a summary of the changed files, and
+  the staged diff through `claude -p`.
 
 ### [`nvim/`](nvim) — Neovim configuration
 
