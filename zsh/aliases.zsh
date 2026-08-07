@@ -1,24 +1,27 @@
-alias code="codium"
-alias cdcode="cdcodium"
-alias mkcdcode="mkcdcodium"
+# Colored / modern defaults
+alias ls="eza"
+alias ll="eza -la"
 alias grep="grep --color=auto"
-alias ll="exa -la"
-alias ls="ll"
-alias v="nvim"
-alias c="clear"
-alias cdc="cdcode"
-alias mkcdc="mkcdcode"
-alias l="ls"
-alias vz="nvim $ZDOTDIR/.zshrc && reload"
-alias vn="nvim $HOME/.config/nvim/init.lua"
-alias mk="mkdir"
-alias cdtemp="cd $(mktemp -d)"
-alias copy="xclip -selection clipboard"
 alias ip="ip --color=always"
-alias curl-novpn="curl --interface wlp1s0"
-alias clip="xclip -selection clipboard"
+
+# Editors
+alias code="codium"
+alias v="nvim"
+
+# Edit configs (single quotes: expand $ZDOTDIR/$HOME at use time)
+alias vz='nvim $ZDOTDIR && reload'
+alias vn='nvim $HOME/.config/nvim/init.lua'
+alias vv='nvim $HOME/.config/nvim/'
+
+# Shorthands
+alias c="clear"
+alias mk="mkdir"
+alias cdc="cdcodium"
+alias mkcdc="mkcdcodium"
+
+# Clipboard
+alias copy="xclip -selection clipboard"
+
+# Misc
 alias npms="jq '.scripts' package.json"
-alias restart_touchpad_drivers="sudo modprobe -r psmouse; sudo modprobe psmouse"
-alias prettierrc="cp $ZDOTDIR/defaults/.prettierrc.json .prettierrc.json"
-alias vz="nvim $ZDOTDIR && reload"
-alias vv="nvim $HOME/.config/nvim/"
+alias prettierrc='cp $ZDOTDIR/templates/.prettierrc.json .prettierrc.json'

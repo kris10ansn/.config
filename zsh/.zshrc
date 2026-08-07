@@ -10,30 +10,45 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-
-# Source manjaro-zsh-configuration
-if [[ -e /usr/share/zsh/manjaro-zsh-config ]]; then
-  source /usr/share/zsh/manjaro-zsh-config
-fi
-# Use manjaro zsh prompt
-if [[ -e /usr/share/zsh/manjaro-zsh-prompt ]]; then
-  source /usr/share/zsh/manjaro-zsh-prompt
-fi
-
+# Environment first: manjaro-zsh-prompt reads USE_POWERLINE
 source $ZDOTDIR/environment.zsh
+
+# Manjaro zsh configuration and prompt
+[[ -e /usr/share/zsh/manjaro-zsh-config ]] && source /usr/share/zsh/manjaro-zsh-config
+[[ -e /usr/share/zsh/manjaro-zsh-prompt ]] && source /usr/share/zsh/manjaro-zsh-prompt
+
 source $ZDOTDIR/aliases.zsh
 source $ZDOTDIR/functions.zsh
+source $ZDOTDIR/plugins/ccommit.zsh
+[[ -r $ZDOTDIR/local.zsh ]] && source $ZDOTDIR/local.zsh
 
-source /usr/share/fzf/key-bindings.zsh
-
+# Options
 unsetopt correct_all
 unsetopt correct
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-source /usr/share/nvm/init-nvm.sh
+# fzf keybindings and completion
+[[ -r /usr/share/fzf/key-bindings.zsh ]] && source /usr/share/fzf/key-bindings.zsh
+[[ -r /usr/share/fzf/completion.zsh ]] && source /usr/share/fzf/completion.zsh
 
-eval "$(zoxide init zsh)"
+# Prompt config lives in the repo; POWERLEVEL9K_CONFIG_FILE makes
+# `p10k configure` write back to the same file
+export POWERLEVEL9K_CONFIG_FILE="$ZDOTDIR/plugins/p10k.zsh"
+[[ -r $POWERLEVEL9K_CONFIG_FILE ]] && source $POWERLEVEL9K_CONFIG_FILE
+
+# Lazy-load nvm: init-nvm.sh is slow, so defer it until nvm/node/npm/npx is
+# first used. Scripts with a node shebang still work via /usr/bin/node.
+if [[ -e /usr/share/nvm/init-nvm.sh ]]; then
+  for _cmd in nvm node npm npx; do
+    eval "$_cmd() {
+      unfunction nvm node npm npx 2>/dev/null
+      source /usr/share/nvm/init-nvm.sh
+      $_cmd \"\$@\"
+    }"
+  done
+  unset _cmd
+fi
+
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
 
 # Startup is done — re-enable ctrl+c for the interactive session.
 trap - INT
