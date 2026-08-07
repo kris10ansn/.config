@@ -19,7 +19,16 @@ mkcdcodium() {
 }
 
 zc() {
-  z $@ && codium .
+  local -a flags dirs
+  local arg
+  for arg in "$@"; do
+    if [[ "$arg" == -* ]]; then
+      flags+=("$arg")
+    else
+      dirs+=("$arg")
+    fi
+  done
+  z "${dirs[@]}" && codium "${flags[@]}" .
 }
 
 cdclone() {
