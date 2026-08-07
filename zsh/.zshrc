@@ -19,7 +19,7 @@ source $ZDOTDIR/environment.zsh
 
 source $ZDOTDIR/aliases.zsh
 source $ZDOTDIR/functions.zsh
-source $ZDOTDIR/plugins/ccommit.zsh
+source $ZDOTDIR/modules/ccommit.zsh
 [[ -r $ZDOTDIR/local.zsh ]] && source $ZDOTDIR/local.zsh
 
 # Options
@@ -32,7 +32,7 @@ unsetopt correct
 
 # Prompt config lives in the repo; POWERLEVEL9K_CONFIG_FILE makes
 # `p10k configure` write back to the same file
-export POWERLEVEL9K_CONFIG_FILE="$ZDOTDIR/plugins/p10k.zsh"
+export POWERLEVEL9K_CONFIG_FILE="$ZDOTDIR/modules/p10k.zsh"
 [[ -r $POWERLEVEL9K_CONFIG_FILE ]] && source $POWERLEVEL9K_CONFIG_FILE
 
 # Lazy-load nvm: init-nvm.sh is slow, so defer it until nvm/node/npm/npx is

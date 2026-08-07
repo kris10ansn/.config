@@ -12,8 +12,8 @@ pile of dotfiles in `$HOME`.
 | `aliases.zsh` | Aliases: renames and flag defaults |
 | `functions.zsh` | Small helper functions (anything with arguments or logic) |
 | `local.zsh` | Machine-specific bits (hardware quirks, interface names); skipped if absent |
-| `plugins/ccommit.zsh` | `ccommit`: AI-generated Conventional Commits messages via the `claude` CLI |
-| `plugins/p10k.zsh` | Powerlevel10k prompt config (`p10k configure` writes back here) |
+| `modules/ccommit.zsh` | `ccommit`: AI-generated Conventional Commits messages via the `claude` CLI |
+| `modules/p10k.zsh` | Powerlevel10k prompt config (`p10k configure` writes back here) |
 | `templates/` | Config templates copied into projects (e.g. `prettierrc`) |
 
 ## Bootstrap on a new machine
