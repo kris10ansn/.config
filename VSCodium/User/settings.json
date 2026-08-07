@@ -94,4 +94,5 @@
   "[csharp]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp",
   },
+  "markdown.preview.fontSize": 18,
 }
