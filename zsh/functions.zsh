@@ -57,7 +57,7 @@ ccommit() {
   local branch
   branch=$(git branch --show-current)
 
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why."
+  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body."
 
   if [[ -n "$branch" ]]; then
     prompt+="
@@ -94,7 +94,14 @@ Output only the message, no preamble, no code fences."
       printf '\nFile status:\n'
       git diff --cached --name-status -M
       printf '\nDiff:\n%s\n' "$diff"
-    } | claude -p --model haiku "$prompt"
+    } | claude -p \
+          --model "${CCOMMIT_MODEL:-sonnet}" \
+          --effort medium \
+          --system-prompt 'You write git commit messages. Output only the message text.' \
+          --tools "" \
+          --disable-slash-commands \
+          --no-session-persistence \
+          "$prompt"
   )
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
