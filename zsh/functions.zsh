@@ -57,7 +57,7 @@ ccommit() {
   local branch
   branch=$(git branch --show-current)
 
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body."
+  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body. Always emit both parts: a type-prefixed summary line, a blank line, then at least one sentence of body. Never reply with only a summary line, even for a one-line change."
 
   if [[ -n "$branch" ]]; then
     prompt+="
@@ -77,7 +77,13 @@ Output only the message, no preamble, no code fences."
 
   local max_diff_lines=2000
   local diff
-  diff=$(git diff --cached)
+  # Small changes get extra surrounding context so the model can see the
+  # neighbouring code instead of guessing; large ones stay at git's default
+  # so the extra context doesn't balloon the request.
+  diff=$(git diff --cached -U15)
+  if (( ${#${(f)diff}} > 400 )); then
+    diff=$(git diff --cached)
+  fi
 
   if (( ${#${(f)diff}} > max_diff_lines )); then
     diff=$(printf '%s\n' "$diff" | head -n $max_diff_lines)
