@@ -20,6 +20,7 @@ source $ZDOTDIR/environment.zsh
 source $ZDOTDIR/aliases.zsh
 source $ZDOTDIR/functions.zsh
 source $ZDOTDIR/modules/ccommit.zsh
+source $ZDOTDIR/modules/cleanup.zsh
 [[ -r $ZDOTDIR/local.zsh ]] && source $ZDOTDIR/local.zsh
 
 # Options
