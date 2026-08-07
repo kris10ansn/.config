@@ -61,13 +61,82 @@ cleanup() {
       paru -Sca --noconfirm
   fi
 
+  # The GitLens editor extension installs the GitKraken CLI itself and keeps
+  # every version it has ever downloaded (~40M each, a new one every couple of
+  # weeks). Only the version the `gk` symlink resolves to is live, so the rest
+  # are dead weight. Resolving the symlink rather than sorting by name means a
+  # rollback to an older build is still respected.
+  local gk_dir=$HOME/.local/share/GitKrakenCLI
+  if [[ -L $gk_dir/gk && -d $gk_dir/versions ]]; then
+    local gk_keep=$gk_dir/gk
+    gk_keep=${gk_keep:A:h:t}
+    local -a gk_old
+    gk_old=($gk_dir/versions/*(N/))
+    gk_old=(${gk_old:#*/$gk_keep})
+    if (( ${#gk_old} )); then
+      _cleanup_confirm "GitKraken CLI$(_cleanup_size $gk_old): remove ${#gk_old} superseded versions, keeping $gk_keep" &&
+        rm -rf -- $gk_old
+    fi
+  fi
+
+  # --- Application caches ----------------------------------------------------
+
+  # The VS Code family stores regenerable HTTP, service-worker and GPU caches
+  # plus a copy of every extension VSIX it has installed. All of it is rebuilt
+  # on next launch. User/ is deliberately untouched: workspaceStorage holds per
+  # -project editor state (open tabs, undo history), which is not a cache.
+  local -a editor_caches ed
+  for ed in VSCodium Cursor Code 'Code - OSS' t3code; do
+    editor_caches+=(
+      $HOME/.config/$ed/Cache(N)
+      $HOME/.config/$ed/CachedData(N)
+      $HOME/.config/$ed/CachedExtensionVSIXs(N)
+      $HOME/.config/$ed/"Service Worker"(N)
+      $HOME/.config/$ed/GPUCache(N)
+    )
+  done
+  if (( ${#editor_caches} )); then
+    _cleanup_confirm "editor caches$(_cleanup_size $editor_caches): delete VS Code-family HTTP, VSIX and GPU caches" &&
+      rm -rf -- $editor_caches
+  fi
+
+  # Tools that cache downloads or build output under ~/.cache and never prune
+  # it themselves. Each one refetches or recomputes on next use.
+  local -a tool_caches
+  tool_caches=(
+    $HOME/.cache/dotslash(N)
+    $HOME/.cache/typescript(N)
+    $HOME/.cache/ms-playwright(N)
+    $HOME/.cache/ms-playwright-go(N)
+    $HOME/.cache/proton-drive-cli(N)
+  )
+  if (( ${#tool_caches} )); then
+    _cleanup_confirm "tool caches$(_cleanup_size $tool_caches): delete ${#tool_caches} rebuildable download caches" &&
+      rm -rf -- $tool_caches
+  fi
+
   # --- System ----------------------------------------------------------------
+
+  # Runtimes are refcounted against installed apps, so --unused only removes
+  # what nothing depends on. Uninstalling an app leaves its runtime behind
+  # forever otherwise, and a GNOME or Freedesktop platform is ~0.5-1G each.
+  if (( $+commands[flatpak] )); then
+    _cleanup_confirm "flatpak runtimes$(_cleanup_size /var/lib/flatpak): remove runtimes no installed app depends on" &&
+      flatpak uninstall --unused
+  fi
 
   # The journal grows to 10% of the filesystem before systemd rotates it.
   # Vacuuming discards the oldest boots, so raise the size to keep more history.
   if (( sudo_ok )) && (( $+commands[journalctl] )); then
     _cleanup_confirm "systemd journal ($(journalctl --disk-usage 2>/dev/null | grep -oE '[0-9.,]+[KMGT]' | tail -n1)): vacuum down to 200M, discarding the oldest boots" &&
       sudo journalctl --vacuum-size=200M
+
+    # Vacuuming is a treadmill while the 10% default stands: the journal simply
+    # grows back. Point at the durable fix once rather than editing /etc here.
+    if ! grep -qs '^[[:space:]]*SystemMaxUse=' /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf; then
+      echo "   hint: SystemMaxUse is unset, so the journal will grow back to 10% of /."
+      echo "         Set SystemMaxUse=500M in /etc/systemd/journald.conf to cap it."
+    fi
   fi
 
   # Brave regenerates this on next launch. Deleting it while the browser is
@@ -100,6 +169,7 @@ cleanup() {
     orphans=(${orphans:#})
     if (( ${#orphans} )); then
       echo "   orphaned packages: ${orphans[*]}"
+      echo "   keep one for good? sudo pacman -D --asexplicit <pkg> stops it being listed again."
       _cleanup_confirm "orphans: uninstall these ${#orphans} packages and their dependencies" &&
         sudo pacman -Rns "${orphans[@]}"
     fi
