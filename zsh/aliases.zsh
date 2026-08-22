@@ -25,3 +25,5 @@ alias copy="xclip -selection clipboard"
 # Misc
 alias npms="jq '.scripts' package.json"
 alias prettierrc='cp $ZDOTDIR/templates/.prettierrc.json .prettierrc.json'
+
+alias clear='printf "\033[2J\033[H"'
