@@ -83,7 +83,7 @@ Use only the supplied change information. Do not run commands or use tools."
       printf '\nFile status:\n'
       git diff --cached --name-status -M
       printf '\nDiff:\n%s\n' "$diff"
-    } | codex "${codex_args[@]}" "$prompt"
+    } | codex "${codex_args[@]}" "$prompt" 2>/dev/null
   )
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
