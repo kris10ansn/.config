@@ -41,7 +41,7 @@ Sourced via `ZDOTDIR="$HOME/.config/zsh"`.
 - **[`functions.zsh`](zsh/functions.zsh)** — helpers including `mkcd`, `cdclone`,
   a few git shortcuts, and `ccommit` — an AI-generated Conventional Commits
   helper that pipes the current branch name, a summary of the changed files, and
-  the staged diff through `claude -p`.
+  the staged diff through `codex exec`.
 
 ### [`nvim/`](nvim) — Neovim configuration
 

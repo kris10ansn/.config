@@ -1,6 +1,6 @@
 # ccommit: generate a Conventional Commits message for the staged diff with
-# Claude, confirm, and commit. Extra arguments are passed as context to the
-# model. Model is configurable via CCOMMIT_MODEL (default: sonnet).
+# Codex, confirm, and commit. Extra arguments are passed as context to the
+# model. Set CCOMMIT_MODEL to override the model configured for Codex.
 ccommit() {
   local context
   context="$*"
@@ -43,6 +43,10 @@ Additional context from the author: $context"
 
 Output only the message, no preamble, no code fences."
 
+  prompt+="
+
+Use only the supplied change information. Do not run commands or use tools."
+
   local max_diff_lines=2000
   local diff
   # Small changes get extra surrounding context so the model can see the
@@ -61,6 +65,17 @@ Output only the message, no preamble, no code fences."
   fi
 
   local msg
+  local -a codex_args
+  codex_args=(
+    exec
+    --sandbox read-only
+    --ephemeral
+    --color never
+  )
+  if [[ -n "${CCOMMIT_MODEL:-}" ]]; then
+    codex_args+=(--model "$CCOMMIT_MODEL")
+  fi
+
   msg=$(
     {
       printf 'Files changed:\n'
@@ -68,14 +83,7 @@ Output only the message, no preamble, no code fences."
       printf '\nFile status:\n'
       git diff --cached --name-status -M
       printf '\nDiff:\n%s\n' "$diff"
-    } | claude -p \
-          --model "${CCOMMIT_MODEL:-sonnet}" \
-          --effort medium \
-          --system-prompt 'You write git commit messages. Output only the message text.' \
-          --tools "" \
-          --disable-slash-commands \
-          --no-session-persistence \
-          "$prompt"
+    } | codex "${codex_args[@]}" "$prompt"
   )
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
