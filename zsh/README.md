@@ -36,3 +36,8 @@ degrade gracefully): `eza`, `fzf`, `zoxide`, `nvm` (Manjaro package),
 `pacman-contrib`), `paru`, and `trash-cli` if present — without `trash-cli` it
 can only empty the trash wholesale instead of applying a 30-day cutoff. The
 prompt uses Manjaro's zsh config and powerlevel10k packages.
+
+`ccommit` also requires `~/.agents/skills/unslop/SKILL.md`. It reads the skill
+into each prompt so Codex can apply its writing instructions without a tool
+call. It uses the configured Codex model, or `CCOMMIT_MODEL` when set, with
+low reasoning and the `node_repl` server disabled for this command.

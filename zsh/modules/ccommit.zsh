@@ -5,6 +5,10 @@ ccommit() {
   local context
   context="$*"
 
+  local unslop_file="$HOME/.agents/skills/unslop/SKILL.md"
+  local unslop
+  unslop=$(cat "$unslop_file") || return 1
+
   if git diff --cached --quiet; then
     if [[ -z "$(git status --porcelain)" ]]; then
       echo "Nothing to commit."
@@ -41,6 +45,12 @@ Additional context from the author: $context"
 
   prompt+="
 
+Apply the following unslop writing instructions to the message. They are included in full; do not load the skill separately. Preserve the required Conventional Commits summary and body format.
+
+<unslop>
+$unslop
+</unslop>
+
 Output only the message, no preamble, no code fences."
 
   prompt+="
@@ -71,6 +81,8 @@ Use only the supplied change information. Do not run commands or use tools."
     --sandbox read-only
     --ephemeral
     --color never
+    -c 'model_reasoning_effort="low"'
+    -c 'mcp_servers.node_repl.enabled=false'
   )
   if [[ -n "${CCOMMIT_MODEL:-}" ]]; then
     codex_args+=(--model "$CCOMMIT_MODEL")
