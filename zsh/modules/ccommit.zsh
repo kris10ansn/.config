@@ -88,6 +88,9 @@ Use only the supplied change information. Do not run commands or use tools."
     codex_args+=(--model "$CCOMMIT_MODEL")
   fi
 
+  local error_file
+  error_file=$(mktemp) || return 1
+  local codex_exit=0
   msg=$(
     {
       printf 'Files changed:\n'
@@ -95,14 +98,25 @@ Use only the supplied change information. Do not run commands or use tools."
       printf '\nFile status:\n'
       git diff --cached --name-status -M
       printf '\nDiff:\n%s\n' "$diff"
-    } | codex "${codex_args[@]}" "$prompt" 2>/dev/null
-  )
+    } | codex "${codex_args[@]}" "$prompt" 2>"$error_file"
+  ) || codex_exit=$?
+
+  if (( codex_exit != 0 )); then
+    printf 'Codex failed to generate a commit message (exit %s).\n' "$codex_exit" >&2
+    cat "$error_file" >&2
+    rm -f "$error_file"
+    return "$codex_exit"
+  fi
+
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
   if [[ -z "$msg" ]]; then
-    echo "No staged changes or empty message."
+    echo "Codex returned an empty commit message." >&2
+    cat "$error_file" >&2
+    rm -f "$error_file"
     return 1
   fi
+  rm -f "$error_file"
 
   printf '\n%s\n\n' "$msg"
   read -r "reply?Accept? [Y/n] "
