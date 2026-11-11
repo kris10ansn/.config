@@ -82,7 +82,6 @@ Use only the supplied change information. Do not run commands or use tools."
     --ephemeral
     --color never
     -c 'model_reasoning_effort="low"'
-    -c 'mcp_servers.node_repl.enabled=false'
   )
   if [[ -n "${CCOMMIT_MODEL:-}" ]]; then
     codex_args+=(--model "$CCOMMIT_MODEL")
