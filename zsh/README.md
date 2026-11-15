@@ -40,4 +40,6 @@ prompt uses Manjaro's zsh config and powerlevel10k packages.
 `ccommit` also requires `~/.agents/skills/unslop/SKILL.md`. It reads the skill
 into each prompt so Codex can apply its writing instructions without a tool
 call. It uses the configured Codex model, or `CCOMMIT_MODEL` when set, with
-low reasoning.
+low reasoning. Run `ccommit --fast` (or `ccommit -f`) to enable fast mode for
+that invocation. Put the flag before any optional context, for example
+`ccommit --fast "explain why the cache changed"`.

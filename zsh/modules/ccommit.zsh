@@ -1,7 +1,14 @@
 # ccommit: generate a Conventional Commits message for the staged diff with
-# Codex, confirm, and commit. Extra arguments are passed as context to the
-# model. Set CCOMMIT_MODEL to override the model configured for Codex.
+# Codex, confirm, and commit. Pass --fast (or -f) first to enable fast mode.
+# Extra arguments are passed as context to the model. Set CCOMMIT_MODEL to
+# override the model configured for Codex.
 ccommit() {
+  local fast=0
+  if [[ "${1:-}" == --fast || "${1:-}" == -f ]]; then
+    fast=1
+    shift
+  fi
+
   local context
   context="$*"
 
@@ -83,6 +90,9 @@ Use only the supplied change information. Do not run commands or use tools."
     --color never
     -c 'model_reasoning_effort="low"'
   )
+  if (( fast )); then
+    codex_args+=(-c 'service_tier="fast"')
+  fi
   if [[ -n "${CCOMMIT_MODEL:-}" ]]; then
     codex_args+=(--model "$CCOMMIT_MODEL")
   fi
