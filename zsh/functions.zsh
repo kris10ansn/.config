@@ -10,15 +10,9 @@ cdtemp() {
   cd "$(mktemp -d)"
 }
 
-cdcodium() {
-  cd "$@" && codium .
-}
-
-mkcdcodium() {
-  mkcd "$@" && codium .
-}
-
-zc() {
+_with_codium() {
+  local navigate="$1"
+  shift
   local -a flags dirs
   local arg
   for arg in "$@"; do
@@ -28,7 +22,19 @@ zc() {
       dirs+=("$arg")
     fi
   done
-  z "${dirs[@]}" && codium "${flags[@]}" .
+  "$navigate" "${dirs[@]}" && codium "${flags[@]}" .
+}
+
+cdcodium() {
+  _with_codium cd "$@"
+}
+
+mkcdcodium() {
+  _with_codium mkcd "$@"
+}
+
+zc() {
+  _with_codium z "$@"
 }
 
 cdclone() {

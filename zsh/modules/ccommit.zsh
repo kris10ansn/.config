@@ -38,6 +38,10 @@ ccommit() {
 
   local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body. Always emit both parts: a type-prefixed summary line, a blank line, then at least one sentence of body. Never reply with only a summary line, even for a one-line change."
 
+  prompt+="
+
+Before writing the title (the first line), review the complete file list and diff to identify every distinct purpose of the changes. The title must reflect the combined intent of the entire commit. Use a specific shared theme when it accurately covers all changes; otherwise name the distinct purposes concisely. Do not focus only on the first, largest, or most prominent change, or use a vague title such as 'update files'. Use an optional scope only if it covers the whole commit. Check the title against all changes before replying; covering an omitted purpose in the body does not make the title complete."
+
   if [[ -n "$branch" ]]; then
     prompt+="
 

@@ -10,17 +10,18 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Environment first: manjaro-zsh-prompt reads USE_POWERLINE
-source $ZDOTDIR/environment.zsh
-
-# Manjaro zsh configuration and prompt
+# Load distro defaults before personal environment overrides.
 [[ -e /usr/share/zsh/manjaro-zsh-config ]] && source /usr/share/zsh/manjaro-zsh-config
+
+# Set USE_POWERLINE before loading the prompt.
+source $ZDOTDIR/environment.zsh
 [[ -e /usr/share/zsh/manjaro-zsh-prompt ]] && source /usr/share/zsh/manjaro-zsh-prompt
 
 source $ZDOTDIR/aliases.zsh
 source $ZDOTDIR/functions.zsh
 source $ZDOTDIR/modules/ccommit.zsh
 source $ZDOTDIR/modules/cleanup.zsh
+source $ZDOTDIR/modules/yts.zsh
 [[ -r $ZDOTDIR/local.zsh ]] && source $ZDOTDIR/local.zsh
 
 # Options
