@@ -4,6 +4,7 @@
 !/zsh
 !/VSCodium
 /VSCodium/*
+/VSCodium/*backup
 !/VSCodium/User
 !/tmux
 

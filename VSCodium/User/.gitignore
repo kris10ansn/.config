@@ -5,3 +5,4 @@ workspaceStorage/
 
 syncLocalSettings.json
 chatLanguageModels.json
+*-backup
