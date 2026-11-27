@@ -1,20 +1,13 @@
 # ccommit: generate a Conventional Commits message for the staged diff with
-# Codex, confirm, and commit. Pass --fast (or -f) first to enable fast mode.
-# Extra arguments are passed as context to the model. Set CCOMMIT_MODEL to
-# override the model configured for Codex.
+# Claude (Haiku by default), confirm, and commit. Extra arguments are passed
+# as context to the model. Set CCOMMIT_MODEL to use a different Claude model.
 ccommit() {
-  local fast=0
-  if [[ "${1:-}" == --fast || "${1:-}" == -f ]]; then
-    fast=1
-    shift
-  fi
-
   local context
   context="$*"
 
   local unslop_file="$HOME/.agents/skills/unslop/SKILL.md"
-  local unslop
-  unslop=$(cat "$unslop_file") || return 1
+  local unslop=""
+  [[ -r "$unslop_file" ]] && unslop=$(<"$unslop_file")
 
   if git diff --cached --quiet; then
     if [[ -z "$(git status --porcelain)" ]]; then
@@ -54,13 +47,17 @@ The current branch is '$branch'. Use it only as a hint about the scope and inten
 Additional context from the author: $context"
   fi
 
-  prompt+="
+  if [[ -n "$unslop" ]]; then
+    prompt+="
 
 Apply the following unslop writing instructions to the message. They are included in full; do not load the skill separately. Preserve the required Conventional Commits summary and body format.
 
 <unslop>
 $unslop
-</unslop>
+</unslop>"
+  fi
+
+  prompt+="
 
 Output only the message, no preamble, no code fences."
 
@@ -86,24 +83,18 @@ Use only the supplied change information. Do not run commands or use tools."
   fi
 
   local msg
-  local -a codex_args
-  codex_args=(
-    exec
-    --sandbox read-only
-    --ephemeral
-    --color never
-    -c 'model_reasoning_effort="low"'
+  local -a claude_args
+  claude_args=(
+    -p
+    --model "${CCOMMIT_MODEL:-haiku}"
+    --tools ""
+    --strict-mcp-config
+    --no-session-persistence
   )
-  if (( fast )); then
-    codex_args+=(-c 'service_tier="fast"')
-  fi
-  if [[ -n "${CCOMMIT_MODEL:-}" ]]; then
-    codex_args+=(--model "$CCOMMIT_MODEL")
-  fi
 
   local error_file
   error_file=$(mktemp) || return 1
-  local codex_exit=0
+  local claude_exit=0
   msg=$(
     {
       printf 'Files changed:\n'
@@ -111,20 +102,20 @@ Use only the supplied change information. Do not run commands or use tools."
       printf '\nFile status:\n'
       git diff --cached --name-status -M
       printf '\nDiff:\n%s\n' "$diff"
-    } | codex "${codex_args[@]}" "$prompt" 2>"$error_file"
-  ) || codex_exit=$?
+    } | claude "${claude_args[@]}" "$prompt" 2>"$error_file"
+  ) || claude_exit=$?
 
-  if (( codex_exit != 0 )); then
-    printf 'Codex failed to generate a commit message (exit %s).\n' "$codex_exit" >&2
+  if (( claude_exit != 0 )); then
+    printf 'Claude failed to generate a commit message (exit %s).\n' "$claude_exit" >&2
     cat "$error_file" >&2
     rm -f "$error_file"
-    return "$codex_exit"
+    return "$claude_exit"
   fi
 
   msg=$(printf '%s\n' "$msg" | sed '/^```/d')
 
   if [[ -z "$msg" ]]; then
-    echo "Codex returned an empty commit message." >&2
+    echo "Claude returned an empty commit message." >&2
     cat "$error_file" >&2
     rm -f "$error_file"
     return 1

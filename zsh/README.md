@@ -12,7 +12,7 @@ pile of dotfiles in `$HOME`.
 | `aliases.zsh` | Aliases: renames and flag defaults |
 | `functions.zsh` | Small helper functions (anything with arguments or logic) |
 | `local.zsh` | Machine-specific bits (hardware quirks, interface names); skipped if absent |
-| `modules/ccommit.zsh` | `ccommit`: AI-generated Conventional Commits messages via the Codex CLI |
+| `modules/ccommit.zsh` | `ccommit`: AI-generated Conventional Commits messages via Claude (Haiku) |
 | `modules/cleanup.zsh` | `cleanup`: reclaim disk space, asking `[y/N]` per step (caches, journal, trash, orphans) |
 | `modules/p10k.zsh` | Powerlevel10k prompt config (`p10k configure` writes back here) |
 | `templates/` | Config templates copied into projects (e.g. `prettierrc`) |
@@ -32,14 +32,13 @@ Then clone this repo to `~/.config/zsh` and start a new shell.
 Expected on `$PATH` (all optional integrations are guarded, so missing ones
 degrade gracefully): `eza`, `fzf`, `zoxide`, `nvm` (Manjaro package),
 `xclip`, `jq`, `nvim` (via [bob](https://github.com/MordechaiHadad/bob)),
-`codium`, and the `codex` CLI for `ccommit`. `cleanup` uses `paccache` (from
+`codium`, and the `claude` CLI for `ccommit`. `cleanup` uses `paccache` (from
 `pacman-contrib`), `paru`, and `trash-cli` if present — without `trash-cli` it
 can only empty the trash wholesale instead of applying a 30-day cutoff. The
 prompt uses Manjaro's zsh config and powerlevel10k packages.
 
-`ccommit` also requires `~/.agents/skills/unslop/SKILL.md`. It reads the skill
-into each prompt so Codex can apply its writing instructions without a tool
-call. It uses the configured Codex model, or `CCOMMIT_MODEL` when set, with
-low reasoning. Run `ccommit --fast` (or `ccommit -f`) to enable fast mode for
-that invocation. Put the flag before any optional context, for example
-`ccommit --fast "explain why the cache changed"`.
+`ccommit` reads `~/.agents/skills/unslop/SKILL.md` into each prompt when the
+file exists, so Claude can apply its writing instructions without a tool call;
+without it, the prompt skips them. It runs `claude -p` with Haiku and no tools; set `CCOMMIT_MODEL` (for
+example `sonnet`) to use a different model. Optional context goes after the
+command, for example `ccommit "explain why the cache changed"`.
