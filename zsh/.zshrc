@@ -51,7 +51,6 @@ if [[ -e /usr/share/nvm/init-nvm.sh ]]; then
 fi
 
 (( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
-[[ -r /usr/share/z/z.sh ]] && source /usr/share/z/z.sh
 
 # Startup is done — re-enable ctrl+c for the interactive session.
 trap - INT

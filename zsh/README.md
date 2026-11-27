@@ -7,7 +7,7 @@ pile of dotfiles in `$HOME`.
 
 | File | Purpose |
 | --- | --- |
-| `.zshrc` | Orchestration: prompt, sourcing the files below, integrations (fzf, nvm, zoxide, z) |
+| `.zshrc` | Orchestration: prompt, sourcing the files below, integrations (fzf, nvm, zoxide) |
 | `environment.zsh` | Environment variables and `$PATH` |
 | `aliases.zsh` | Aliases: renames and flag defaults |
 | `functions.zsh` | Small helper functions (anything with arguments or logic) |
@@ -30,7 +30,7 @@ Then clone this repo to `~/.config/zsh` and start a new shell.
 ## Dependencies
 
 Expected on `$PATH` (all optional integrations are guarded, so missing ones
-degrade gracefully): `eza`, `fzf`, `zoxide`, `z`, `nvm` (Manjaro package),
+degrade gracefully): `eza`, `fzf`, `zoxide`, `nvm` (Manjaro package),
 `xclip`, `jq`, `nvim` (via [bob](https://github.com/MordechaiHadad/bob)),
 `codium`, and the `claude` CLI for `ccommit`. `cleanup` uses `paccache` (from
 `pacman-contrib`), `paru`, and `trash-cli` if present — without `trash-cli` it
