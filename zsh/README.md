@@ -37,8 +37,17 @@ degrade gracefully): `eza`, `fzf`, `zoxide`, `nvm` (Manjaro package),
 can only empty the trash wholesale instead of applying a 30-day cutoff. The
 prompt uses Manjaro's zsh config and powerlevel10k packages.
 
-`ccommit` reads `~/.agents/skills/unslop/SKILL.md` into each prompt when the
-file exists, so Claude can apply its writing instructions without a tool call;
-without it, the prompt skips them. It runs `claude -p` with Haiku and no tools; set `CCOMMIT_MODEL` (for
-example `sonnet`) to use a different model. Optional context goes after the
-command, for example `ccommit "explain why the cache changed"`.
+`ccommit` commits the staged changes right away under a placeholder message,
+then asks Claude (`claude -p`, Haiku, no tools) for a Conventional Commits
+message and swaps it in once you accept. The staging area is free while the
+message is generated, so you can stage more work or start another `ccommit`
+in parallel; runs that finish out of order still get the right messages.
+Answer `n` to undo the commit (its changes go back to staged) or `e` to edit
+the message. If newer commits already sit on top, declining opens your editor
+instead. Don't push while a placeholder is still in the log.
+
+Set `CCOMMIT_MODEL` (for example `sonnet`) to use a different model. Optional
+context goes after the command, for example
+`ccommit "explain why the cache changed"`. When
+`~/.agents/skills/unslop/SKILL.md` exists, its writing instructions are added
+to the prompt.

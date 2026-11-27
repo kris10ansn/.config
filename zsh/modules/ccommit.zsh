@@ -1,134 +1,291 @@
-# ccommit: generate a Conventional Commits message for the staged diff with
-# Claude (Haiku by default), confirm, and commit. Extra arguments are passed
-# as context to the model. Set CCOMMIT_MODEL to use a different Claude model.
+# ccommit: commit staged changes with a Conventional Commits message written
+# by Claude (Haiku by default; set CCOMMIT_MODEL to change it). Extra
+# arguments are passed to the model as context.
+#
+# The changes are committed straight away under a placeholder message, so the
+# staging area is free while the message is generated: stage more work or
+# start another ccommit in the meantime. Once you accept, the placeholder is
+# replaced. Declining undoes the commit if it is still the latest one, and
+# otherwise opens your editor to write the message by hand.
+
 ccommit() {
-  local context
-  context="$*"
+  emulate -L zsh
+  setopt local_traps
 
-  local unslop_file="$HOME/.agents/skills/unslop/SKILL.md"
-  local unslop=""
-  [[ -r "$unslop_file" ]] && unslop=$(<"$unslop_file")
+  local context="$*"
+  git rev-parse --git-dir >/dev/null || return 1
+  _ccommit_stage || return 1
 
-  if git diff --cached --quiet; then
-    if [[ -z "$(git status --porcelain)" ]]; then
-      echo "Nothing to commit."
-      return 1
+  # Pre-commit runs now so failures show up before the wait. commit-msg runs
+  # later on the real message, since it would reject the placeholder.
+  git hook run --ignore-missing pre-commit || return 1
+
+  local token="ccommit-$(date +%s)-$$-$RANDOM"
+  git commit --quiet --no-verify --message "ccommit: generating message [$token]" || return 1
+  local commit
+  commit=$(git rev-parse --short HEAD)
+  print "Committed $commit with a placeholder message; the staging area is free."
+
+  local interrupted=0
+  trap 'interrupted=1' INT
+
+  local msg reply action
+  if msg=$(_ccommit_generate "$commit" "$context") && (( ! interrupted )); then
+    print -r -- $'\n'"$msg"$'\n'
+    read -r "reply?Accept? [Y/n/e(dit)] "
+    (( interrupted )) && reply=n
+    case $reply in
+      [Nn]*) action=undo ;;
+      [Ee]*) action=edit ;;
+      *)     action=accept ;;
+    esac
+  else
+    print -u2 "No message generated for $commit."
+    action=undo
+  fi
+
+  _ccommit_finish "$token" "$commit" "$action" "$msg"
+}
+
+# Carry out <action> (accept, edit or undo) on the placeholder commit tagged
+# with <token>, using <msg> as the message.
+_ccommit_finish() {
+  local token=$1 commit=$2 action=$3 msg=$4
+
+  if [[ $action == undo ]]; then
+    _ccommit_locked _ccommit_undo "$token"
+    case $? in
+      0) return 0 ;;
+      2) print "$commit is no longer the latest commit; write its message instead."
+         action=edit ;;
+      *) return 1 ;;
+    esac
+  fi
+
+  local msg_file
+  msg_file=$(mktemp) || return 1
+  print -r -- "$msg" >"$msg_file"
+  {
+    if [[ $action == edit ]]; then
+      _ccommit_edit "$msg_file" || return 1
     fi
-    echo "No staged changes. The following changes would be committed:"
-    echo
-    git status --short
-    echo
-    read -r "reply?Commit all these changes? [Y/n] "
-    if [[ "$reply" =~ ^[Nn]$ ]]; then
-      echo "Aborted."
-      return 1
-    fi
-    git add -A
+    until git hook run --ignore-missing commit-msg -- "$msg_file"; do
+      print -u2 "The commit-msg hook rejected the message; edit it to try again."
+      _ccommit_edit "$msg_file" || return 1
+    done
+    _ccommit_locked _ccommit_reword "$token" "$msg_file"
+  } always {
+    rm -f "$msg_file"
+  }
+}
+
+# If nothing is staged, offer to stage every change.
+_ccommit_stage() {
+  git diff --cached --quiet || return 0
+
+  if [[ -z $(git status --porcelain) ]]; then
+    print "Nothing to commit."
+    return 1
   fi
 
-  local branch
-  branch=$(git branch --show-current)
-
-  local prompt="Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body. Always emit both parts: a type-prefixed summary line, a blank line, then at least one sentence of body. Never reply with only a summary line, even for a one-line change."
-
-  prompt+="
-
-Before writing the title (the first line), review the complete file list and diff to identify every distinct purpose of the changes. The title must reflect the combined intent of the entire commit. Use a specific shared theme when it accurately covers all changes; otherwise name the distinct purposes concisely. Do not focus only on the first, largest, or most prominent change, or use a vague title such as 'update files'. Use an optional scope only if it covers the whole commit. Check the title against all changes before replying; covering an omitted purpose in the body does not make the title complete."
-
-  if [[ -n "$branch" ]]; then
-    prompt+="
-
-The current branch is '$branch'. Use it only as a hint about the scope and intent of the change. Never quote the branch name or mention the branch in the message."
+  print "No staged changes. The following changes would be committed:\n"
+  git status --short
+  print
+  local reply
+  read -r "reply?Commit all these changes? [Y/n] "
+  if [[ $reply == [Nn]* ]]; then
+    print "Aborted."
+    return 1
   fi
+  git add --all
+}
 
-  if [[ -n "$context" ]]; then
-    prompt+="
-
-Additional context from the author: $context"
-  fi
-
-  if [[ -n "$unslop" ]]; then
-    prompt+="
-
-Apply the following unslop writing instructions to the message. They are included in full; do not load the skill separately. Preserve the required Conventional Commits summary and body format.
-
-<unslop>
-$unslop
-</unslop>"
-  fi
-
-  prompt+="
-
-Output only the message, no preamble, no code fences."
-
-  prompt+="
-
-Use only the supplied change information. Do not run commands or use tools."
-
-  local max_diff_lines=2000
-  local diff
-  # Small changes get extra surrounding context so the model can see the
-  # neighbouring code instead of guessing; large ones stay at git's default
-  # so the extra context doesn't balloon the request.
-  diff=$(git diff --cached -U15)
-  if (( ${#${(f)diff}} > 400 )); then
-    diff=$(git diff --cached)
-  fi
-
-  if (( ${#${(f)diff}} > max_diff_lines )); then
-    diff=$(printf '%s\n' "$diff" | head -n $max_diff_lines)
-    diff+="
-
-[... diff truncated after $max_diff_lines lines; see the file summary above for the full scope ...]"
-  fi
-
-  local msg
-  local -a claude_args
-  claude_args=(
-    -p
-    --model "${CCOMMIT_MODEL:-haiku}"
-    --tools ""
-    --strict-mcp-config
-    --no-session-persistence
-  )
+# Print a commit message for <commit>, generated by Claude.
+_ccommit_generate() {
+  local commit=$1 context=$2
+  local base
+  base=$(git rev-parse --quiet --verify "$commit^") \
+    || base=$(git hash-object -t tree /dev/null)
 
   local error_file
   error_file=$(mktemp) || return 1
-  local claude_exit=0
+
+  local msg
   msg=$(
-    {
-      printf 'Files changed:\n'
-      git diff --cached --stat
-      printf '\nFile status:\n'
-      git diff --cached --name-status -M
-      printf '\nDiff:\n%s\n' "$diff"
-    } | claude "${claude_args[@]}" "$prompt" 2>"$error_file"
-  ) || claude_exit=$?
+    _ccommit_change_summary "$base" "$commit" |
+      claude -p \
+        --model "${CCOMMIT_MODEL:-haiku}" \
+        --tools "" \
+        --strict-mcp-config \
+        --no-session-persistence \
+        "$(_ccommit_prompt "$context")" 2>"$error_file"
+  )
+  local exit_code=$?
+  msg=$(print -r -- "$msg" | sed '/^```/d')
 
-  if (( claude_exit != 0 )); then
-    printf 'Claude failed to generate a commit message (exit %s).\n' "$claude_exit" >&2
-    cat "$error_file" >&2
-    rm -f "$error_file"
-    return "$claude_exit"
-  fi
-
-  msg=$(printf '%s\n' "$msg" | sed '/^```/d')
-
-  if [[ -z "$msg" ]]; then
-    echo "Claude returned an empty commit message." >&2
+  if (( exit_code != 0 )) || [[ -z $msg ]]; then
+    print -u2 "Claude failed to generate a commit message (exit $exit_code)."
     cat "$error_file" >&2
     rm -f "$error_file"
     return 1
   fi
   rm -f "$error_file"
+  print -r -- "$msg"
+}
 
-  printf '\n%s\n\n' "$msg"
-  read -r "reply?Accept? [Y/n] "
+# Print the file list and diff between two revisions for the model.
+_ccommit_change_summary() {
+  local base=$1 commit=$2
+  local max_diff_lines=2000
 
-  if [[ "$reply" =~ ^[Nn]$ ]]; then
-    echo "Aborted."
-    return 1
+  # Small changes get extra surrounding context so the model can see the
+  # neighbouring code instead of guessing; large ones stay at git's default
+  # so the extra context doesn't balloon the request.
+  local diff
+  diff=$(git diff -U15 "$base" "$commit")
+  if (( ${#${(f)diff}} > 400 )); then
+    diff=$(git diff "$base" "$commit")
+  fi
+  if (( ${#${(f)diff}} > max_diff_lines )); then
+    diff="$(print -r -- "$diff" | head -n $max_diff_lines)
+
+[... diff truncated after $max_diff_lines lines; see the file summary above for the full scope ...]"
   fi
 
-  git commit -m "$msg"
+  print "Files changed:"
+  git diff --stat "$base" "$commit"
+  print "\nFile status:"
+  git diff --name-status -M "$base" "$commit"
+  print -r -- $'\nDiff:\n'"$diff"
+}
+
+# Print the instructions for the model.
+_ccommit_prompt() {
+  local context=$1
+  local branch unslop
+  branch=$(git branch --show-current)
+  local unslop_file="$HOME/.agents/skills/unslop/SKILL.md"
+  [[ -r $unslop_file ]] && unslop=$(<"$unslop_file")
+
+  print -r -- "Write a git commit message for this diff following Conventional Commits. Start the summary line with a type (feat, fix, chore, style, refactor, docs, test, perf, build, ci) and optional scope, e.g. 'feat(auth): ...'. Keep the summary under 50 chars, then a blank line, then a body explaining what changed and why. Account for every file in the file list; do not leave a changed file out of the body. Always emit both parts: a type-prefixed summary line, a blank line, then at least one sentence of body. Never reply with only a summary line, even for a one-line change.
+
+Before writing the title (the first line), review the complete file list and diff to identify every distinct purpose of the changes. The title must reflect the combined intent of the entire commit. Use a specific shared theme when it accurately covers all changes; otherwise name the distinct purposes concisely. Do not focus only on the first, largest, or most prominent change, or use a vague title such as 'update files'. Use an optional scope only if it covers the whole commit. Check the title against all changes before replying; covering an omitted purpose in the body does not make the title complete."
+
+  [[ -n $branch ]] && print -r -- "
+The current branch is '$branch'. Use it only as a hint about the scope and intent of the change. Never quote the branch name or mention the branch in the message."
+
+  [[ -n $context ]] && print -r -- "
+Additional context from the author: $context"
+
+  [[ -n $unslop ]] && print -r -- "
+Apply the following unslop writing instructions to the message. They are included in full; do not load the skill separately. Preserve the required Conventional Commits summary and body format.
+
+<unslop>
+$unslop
+</unslop>"
+
+  print -r -- "
+Output only the message, no preamble, no code fences.
+
+Use only the supplied change information. Do not run commands or use tools."
+}
+
+# Run a command while holding the repository's ccommit lock, so parallel
+# runs never rewrite history at the same time.
+_ccommit_locked() {
+  zmodload -F zsh/system b:zsystem || return 1
+  local lock_file fd
+  lock_file="$(git rev-parse --git-common-dir)/ccommit.lock"
+  : >>"$lock_file" || return 1  # zsystem flock needs an existing file
+  zsystem flock -t 30 -f fd "$lock_file" || {
+    print -u2 "Could not get the ccommit lock (another run still busy?)."
+    return 1
+  }
+  {
+    "$@"
+  } always {
+    zsystem flock -u $fd
+  }
+}
+
+# Print the hash of the placeholder commit tagged with <token>.
+_ccommit_find() {
+  local token=$1 commit
+  commit=$(git rev-list --fixed-strings --grep="[$token]" --max-count=1 HEAD)
+  if [[ -z $commit ]]; then
+    print -u2 "Placeholder commit not found on the current branch."
+    return 1
+  fi
+  print -r -- "$commit"
+}
+
+# Undo the placeholder commit, leaving its changes staged. Returns 2 if newer
+# commits sit on top of it.
+_ccommit_undo() {
+  local token=$1 target head
+  target=$(_ccommit_find "$token") || return 1
+  head=$(git rev-parse HEAD)
+  [[ $target == $head ]] || return 2
+
+  if git rev-parse --quiet --verify "$target^" >/dev/null; then
+    git reset --quiet --soft "$target^"
+  else
+    git update-ref -d HEAD "$target"  # first commit in the repository
+  fi
+  print "Undone; the changes are staged again."
+}
+
+# Replace the placeholder commit's message with the one in <msg_file>.
+# Newer commits on top are recreated with the same content and messages.
+# Only commit objects change, so the index and working tree are untouched.
+_ccommit_reword() {
+  local token=$1 msg_file=$2
+  local head target
+  head=$(git rev-parse HEAD) || return 1
+  target=$(_ccommit_find "$token") || return 1
+
+  local -A rewritten
+  rewritten[$target]=$(_ccommit_recreate "$target" "$msg_file") || return 1
+
+  local commit
+  for commit in $(git rev-list --reverse --topo-order --ancestry-path "$target..$head"); do
+    rewritten[$commit]=$(git log -1 --format=%B "$commit" |
+      _ccommit_recreate "$commit" - rewritten) || return 1
+  done
+
+  git update-ref -m "ccommit: set message" HEAD "${rewritten[$head]}" "$head" || return 1
+  git log -1 --format='Committed %h: %s' "${rewritten[$target]}"
+}
+
+# Print the hash of a copy of <commit> with the message read from <msg_file>
+# ("-" for stdin) and its parents mapped through the associative array named
+# by <parent_map>, if given. The author and author date are kept.
+_ccommit_recreate() {
+  local commit=$1 msg_file=$2 parent_map=$3
+  local -a parent_args
+  local parent mapped
+  for parent in $(git rev-parse "$commit^@"); do
+    if [[ -n $parent_map ]]; then
+      mapped="${parent_map}[$parent]"
+      parent=${${(P)mapped}:-$parent}
+    fi
+    parent_args+=(-p "$parent")
+  done
+
+  GIT_AUTHOR_NAME=$(git log -1 --format=%an "$commit") \
+  GIT_AUTHOR_EMAIL=$(git log -1 --format=%ae "$commit") \
+  GIT_AUTHOR_DATE=$(git log -1 --format=%ad --date=raw "$commit") \
+    git commit-tree "$commit^{tree}" "${parent_args[@]}" -F "$msg_file"
+}
+
+# Let the user edit <msg_file> in their git editor. An empty message gives up
+# and leaves the placeholder in place.
+_ccommit_edit() {
+  local msg_file=$1 editor
+  editor=$(git var GIT_EDITOR) || return 1
+  sh -c "$editor \"\$1\"" sh "$msg_file" || return 1
+  if [[ -z ${"$(<$msg_file)"//[[:space:]]/} ]]; then
+    print -u2 "Empty message; the commit keeps its placeholder (fix it with git rebase -i)."
+    return 1
+  fi
 }
