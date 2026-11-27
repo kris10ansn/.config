@@ -63,6 +63,9 @@
   "terminal.integrated.fontFamily": "CaskaydiaCove Nerd Font Mono",
 
   "update.showReleaseNotes": false,
+  "vim.handleKeys": {
+    "<C-p>": false,
+  },
   "vim.useSystemClipboard": true,
   "window.commandCenter": false,
   "window.titleBarStyle": "native",
